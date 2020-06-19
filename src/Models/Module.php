@@ -12,6 +12,7 @@ namespace Lehungdev\Crmadmin\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Str;
 use Exception;
 use Log;
 use DB;
@@ -28,15 +29,15 @@ use Lehungdev\Crmadmin\Helpers\LAHelper;
 class Module extends Model
 {
     protected $table = 'modules';
-    
+
     protected $fillable = [
         "name", "name_db", "label", "view_col", "model", "controller", "is_gen", "fa_icon"
     ];
-    
+
     protected $hidden = [
-    
+
     ];
-    
+
     /**
      * Generates Module Base by taking Module Name and Module FontAwesome Icon
      * It firstly checks if Module is already generated or not then
@@ -48,7 +49,7 @@ class Module extends Model
      */
     public static function generateBase($module_name, $icon)
     {
-        
+
         $names = LAHelper::generateModuleNames($module_name, $icon);
 
         //Create names module langguege
@@ -84,7 +85,7 @@ class Module extends Model
                 'controller' => $names->controller,
                 'fa_icon' => $names->fa_icon,
                 'is_gen' => $is_gen,
-            
+
             ]);
         }
 
@@ -114,7 +115,7 @@ class Module extends Model
 
         return $module->id;
     }
-    
+
     /**
      * This function handles Module Migration via "Module::generate()" call from migrations file.
      * This creates all given Module fields into database.
@@ -128,10 +129,10 @@ class Module extends Model
      */
     public static function generate($module_name, $module_name_db, $view_col, $faIcon = "fa-cube", $fields)
     {
-        
+
         $names = LAHelper::generateModuleNames($module_name, $faIcon);
         $fields = Module::format_fields($module_name, $fields);
-        
+
         if(substr_count($view_col, " ") || substr_count($view_col, ".")) {
             throw new Exception("Unable to generate migration for " . ($names->module) . " : Invalid view_column_name. 'This should be database friendly lowercase name.'", 1);
         } else if(!Module::validate_view_column($fields, $view_col)) {
@@ -146,7 +147,7 @@ class Module extends Model
                     $is_gen = true;
                 }
             }
-            
+
             // Create Module if not exists
             $module = Module::where('name', $names->module)->first();
             if(!isset($module->id)) {
@@ -161,25 +162,25 @@ class Module extends Model
                     'fa_icon' => $faIcon
                 ]);
             }
-            
+
             $ftypes = ModuleFieldTypes::getFTypes();
             //print_r($ftypes);
             //print_r($module);
             //print_r($fields);
-            
+
             // Create Database Schema for table
             Schema::create($names->table, function (Blueprint $table) use ($fields, $module, $ftypes) {
                 $table->increments('id');
                 foreach($fields as $field) {
-                    
+
                     $mod = ModuleFields::where('module', $module->id)->where('colname', $field->colname)->first();
                     if(!isset($mod->id)) {
                         if($field->field_type == "Multiselect" || $field->field_type == "Taginput") {
-                            
-                            if(is_string($field->defaultvalue) && starts_with($field->defaultvalue, "[")) {
+
+                            if(is_string($field->defaultvalue) && Str::of($field->defaultvalue)->startsWith('[')) {
                                 $field->defaultvalue = json_decode($field->defaultvalue);
                             }
-                            
+
                             if(is_string($field->defaultvalue) || is_int($field->defaultvalue)) {
                                 $dvalue = json_encode([$field->defaultvalue]);
                             } else {
@@ -193,12 +194,12 @@ class Module extends Model
                                 $dvalue = json_encode($field->defaultvalue);
                             }
                         }
-                        
+
                         $pvalues = $field->popup_vals;
                         if(is_array($field->popup_vals) || is_object($field->popup_vals)) {
                             $pvalues = json_encode($field->popup_vals);
                         }
-                        
+
                         // Create Module field Metadata / Context
                         $field_obj = ModuleFields::create([
                             'module' => $module->id,
@@ -216,11 +217,11 @@ class Module extends Model
                         $field->id = $field_obj->id;
                         $field->module_obj = $module;
                     }
-                    
+
                     // Create Module field schema in database
                     Module::create_field_schema($table, $field);
                 }
-                
+
                 // $table->string('name');
                 // $table->string('designation', 100);
                 // $table->string('mobile', 20);
@@ -244,7 +245,7 @@ class Module extends Model
             });
         }
     }
-    
+
     /**
      * Validates if given view_column_name exists in fields array
      *
@@ -263,7 +264,7 @@ class Module extends Model
         }
         return $found;
     }
-    
+
     /**
      * Method creates database table field via $table variable from Schema
      * @param $table
@@ -284,7 +285,7 @@ class Module extends Model
         }
         // Log::debug('Module:create_field_schema ('.$update.') - '.$field->colname." - ".$field->field_type
         // ." - ".$defval." - ".$field->maxlength);
-        
+
         // Create Field in Database for respective Field Type
         switch($field->field_type) {
             case 'Address':
@@ -345,7 +346,7 @@ class Module extends Model
                 } else {
                     $var = $table->date($field->colname)->nullable();
                 }
-                
+
                 if($field->defaultvalue == NULL || $field->defaultvalue == "" || $field->defaultvalue == "NULL") {
                     $var->default(NULL);
                 } else if($field->defaultvalue == "now()") {
@@ -409,7 +410,7 @@ class Module extends Model
                     }
                 }
                 $popup_vals = json_decode($field->popup_vals);
-                if(starts_with($field->popup_vals, "@")) {
+                if(Str::of($field->popup_vals)->startsWith('@')) {
                     $foreign_table_name = str_replace("@", "", $field->popup_vals);
                     if($update) {
                         $var = $table->integer($field->colname)->nullable()->unsigned()->change();
@@ -492,7 +493,7 @@ class Module extends Model
                 } else {
                     $var = $table->string($field->colname, 256);
                 }
-                if(is_string($field->defaultvalue) && starts_with($field->defaultvalue, "[")) {
+                if(is_string($field->defaultvalue) && Str::of($field->defaultvalue)->startsWith('[')) {
                     $var->default($field->defaultvalue);
                 } else if(is_array($field->defaultvalue)) {
                     $var->default(json_encode($field->defaultvalue));
@@ -581,7 +582,7 @@ class Module extends Model
                 if(is_array($field->defaultvalue)) {
                     $field->defaultvalue = json_encode($field->defaultvalue);
                     $var->default($field->defaultvalue);
-                } else if(is_string($field->defaultvalue) && starts_with($field->defaultvalue, "[")) {
+                } else if(is_string($field->defaultvalue) && Str::of($field->defaultvalue)->startsWith('[')) {
                     $var->default($field->defaultvalue);
                 } else if($field->defaultvalue == "" || $field->defaultvalue == null) {
                     $var->default("[]");
@@ -659,7 +660,7 @@ class Module extends Model
                         break;
                     }
                 }
-                if(is_string($field->popup_vals) && starts_with($field->popup_vals, "@")) {
+                if(is_string($field->popup_vals) && Str::of(($field->popup_vals)->startsWith('@'))) {
                     if($update) {
                         $var = $table->integer($field->colname)->unsigned()->change();
                     } else {
@@ -720,10 +721,10 @@ class Module extends Model
                 } else {
                     $var = $table->string($field->colname, 1000)->nullable();
                 }
-                if(is_string($field->defaultvalue) && starts_with($field->defaultvalue, "[")) {
+                if(is_string($field->defaultvalue) && Str::of($field->defaultvalue)->startsWith('[')) {
                     $field->defaultvalue = json_decode($field->defaultvalue);
                 }
-                
+
                 if(is_string($field->defaultvalue)) {
                     $field->defaultvalue = json_encode([$field->defaultvalue]);
                     //echo "string: ".$field->defaultvalue;
@@ -844,7 +845,7 @@ class Module extends Model
                 }
                 break;
         }
-        
+
         // set column unique
         if($update) {
             if($isFieldTypeChange) {
@@ -858,7 +859,7 @@ class Module extends Model
             }
         }
     }
-    
+
     /**
      * This method process and alters user created migration fields array to fit into standard field Context / Metedata
      *
@@ -880,7 +881,7 @@ class Module extends Model
             // Check if field format is New
             if(LAHelper::is_assoc_array($field)) {
                 $obj = (object)$field;
-                
+
                 if(!isset($obj->colname)) {
                     throw new Exception("Migration " . $module_name . " -  Field does not have colname", 1);
                 } else if(!isset($obj->label)) {
@@ -919,7 +920,7 @@ class Module extends Model
                         $obj->listing_col = 0;
                     }
                 }
-                
+
                 if(!isset($obj->popup_vals)) {
                     $obj->popup_vals = "";
                 } else {
@@ -937,7 +938,7 @@ class Module extends Model
                 $obj->colname = $field[0];
                 $obj->label = $field[1];
                 $obj->field_type = $field[2];
-                
+
                 if(!isset($field[3])) {
                     $obj->unique = 0;
                 } else {
@@ -969,7 +970,7 @@ class Module extends Model
                     $obj->required = $field[7];
                 }
                 $obj->listing_col = 1;
-                
+
                 if(!isset($field[8])) {
                     $obj->popup_vals = "";
                 } else {
@@ -984,7 +985,7 @@ class Module extends Model
         }
         return $out;
     }
-    
+
     /**
      * Get Module Object by passing Module Name / id
      * It also includes array of Module fields
@@ -1018,7 +1019,7 @@ class Module extends Model
             return null;
         }
     }
-    
+
     /**
      * Get Module by table name
      *
@@ -1037,7 +1038,7 @@ class Module extends Model
             return null;
         }
     }
-    
+
     /**
      * Get Array of Values for Dropdown, Multiselect, Taginput, Radio from Module
      *
@@ -1056,7 +1057,7 @@ class Module extends Model
             } else {
                 $model = "App\\Models\\" . ucfirst(str_singular($module_name));
             }
-            
+
             $result = $model::all();
             $out = array();
             foreach($result as $row) {
@@ -1068,7 +1069,7 @@ class Module extends Model
             return array();
         }
     }
-    
+
     /**
      * Create Validations rules array for Laravel Validations using Module Field Context / Metadata
      * Used in CrmAdmin generated Controllers for store and update.
@@ -1121,7 +1122,7 @@ class Module extends Model
             return $rules;
         }
     }
-    
+
     /**
      * This method saves data from Request to Database.
      *
@@ -1139,7 +1140,7 @@ class Module extends Model
             } else {
                 $model = "App\\Models\\" . ucfirst(str_singular($module_name));
             }
-            
+
             // Delete if unique rows available which are deleted
             $old_row = null;
             $uniqueFields = ModuleFields::where('module', $module->id)->where('unique', '1')->get()->toArray();
@@ -1151,7 +1152,7 @@ class Module extends Model
                     DB::table($module->name_db)->whereNotNull('deleted_at')->where($field['colname'], $request->{$field['colname']})->delete();
                 }
             }
-            
+
             $row = new $model;
             if(isset($old_row->id)) {
                 // To keep old & new row id remain same
@@ -1164,7 +1165,7 @@ class Module extends Model
             return null;
         }
     }
-    
+
     /**
      * This method updates data from Request to Database for given Module and Row Id
      *
@@ -1192,7 +1193,7 @@ class Module extends Model
             return null;
         }
     }
-    
+
     /**
      * Process Row Data According to its Field Type & Context / Metadata
      * Helps to save and update database records
@@ -1205,10 +1206,10 @@ class Module extends Model
     public static function processDBRow($module, $request, $row)
     {
         $ftypes = ModuleFieldTypes::getFTypes2();
-        
+
         foreach($module->fields as $field) {
             if(isset($request->{$field['colname']}) || isset($request->{$field['colname'] . "_hidden"})) {
-                
+
                 switch($ftypes[$field['field_type']]) {
                     case 'Checkbox':
                         if(isset($request->{$field['colname']})) {
@@ -1245,9 +1246,9 @@ class Module extends Model
                         break;
                     case 'Dropdown':
                         if($request->{$field['colname']} == 0) {
-                            if(starts_with($field['popup_vals'], "@")) {
+                            if(Str::of($field['popup_vals'])->startsWith('@')) {
                                 $request->{$field['colname']} = DB::raw('NULL');
-                            } else if(starts_with($field['popup_vals'], "[")) {
+                            } else if(Str::of($field['popup_vals'])->startsWith('[')) {
                                 $request->{$field['colname']} = "";
                             }
                         }
@@ -1280,7 +1281,7 @@ class Module extends Model
         }
         return $row;
     }
-    
+
     /**
      * Count Number of rows in Table of given Module
      *
@@ -1311,7 +1312,7 @@ class Module extends Model
             return -1;
         }
     }
-    
+
     /**
      * Get Module Access for all roles or specific role
      *
@@ -1325,23 +1326,23 @@ class Module extends Model
     {
         $module = Module::find($module_id);
         $module = Module::get($module->name);
-        
+
         if($specific_role) {
             $roles_arr = DB::table('roles')->where('id', $specific_role)->get();
         } else {
             $roles_arr = DB::table('roles')->get();
         }
         $roles = array();
-        
+
         $arr_field_access = array(
             'invisible' => 0,
             'readonly' => 1,
             'write' => 2
         );
-        
+
         foreach($roles_arr as $role) {
             // get Current Module permissions for this role
-            
+
             $module_perm = DB::table('role_module')->where('role_id', $role->id)->where('module_id', $module->id)->first();
             if(isset($module_perm->id)) {
                 // set db values
@@ -1355,14 +1356,14 @@ class Module extends Model
                 $role->edit = false;
                 $role->delete = false;
             }
-            
+
             // get Current Module Fields permissions for this role
-            
+
             $role->fields = array();
             foreach($module->fields as $field) {
                 // find role field permission
                 $field_perm = DB::table('role_module_fields')->where('role_id', $role->id)->where('field_id', $field['id'])->first();
-                
+
                 if(isset($field_perm->id)) {
                     $field['access'] = $arr_field_access[$field_perm->access];
                 } else {
@@ -1375,7 +1376,7 @@ class Module extends Model
         }
         return $roles;
     }
-    
+
     /**
      * Get Specific Module Access for login user or specific user ($user_id)
      *
@@ -1389,16 +1390,16 @@ class Module extends Model
     public static function hasAccess($module_id, $access_type = "view", $user_id = 0)
     {
         $roles = array();
-        
+
         if(is_string($module_id)) {
             $module = Module::get($module_id);
             $module_id = $module->id;
         }
-        
+
         if($access_type == null || $access_type == "") {
             $access_type = "view";
         }
-        
+
         if($user_id) {
             $user = \App\User::find($user_id);
             if(isset($user->id)) {
@@ -1421,7 +1422,7 @@ class Module extends Model
         }
         return false;
     }
-    
+
     /**
      * Get Module Field Access for role and access type
      *
@@ -1436,7 +1437,7 @@ class Module extends Model
     public static function hasFieldAccess($module_id, $field_id, $access_type = "view", $user_id = 0)
     {
         $roles = array();
-        
+
         // \Log::debug("module_id: ".$module_id." field_id: ".$field_id." access_type: ".$access_type);
 
         if(\Auth::guest()) {
@@ -1447,16 +1448,16 @@ class Module extends Model
             $module = Module::get($module_id);
             $module_id = $module->id;
         }
-        
+
         if(is_string($field_id)) {
             $field_object = ModuleFields::where('module', $module_id)->where('colname', $field_id)->first();
             $field_id = $field_object->id;
         }
-        
+
         if($access_type == null || $access_type == "") {
             $access_type = "view";
         }
-        
+
         if($user_id) {
             $user = \App\User::find($user_id);
             if(isset($user->id)) {
@@ -1465,9 +1466,9 @@ class Module extends Model
         } else {
             $roles = \Auth::user()->roles();
         }
-        
+
         $hasModuleAccess = false;
-        
+
         foreach($roles->get() as $role) {
             $module_perm = DB::table('role_module')->where('role_id', $role->id)->where('module_id', $module_id)->first();
             if(isset($module_perm->id)) {
@@ -1502,7 +1503,7 @@ class Module extends Model
         }
         return false;
     }
-    
+
     /**
      * Set Default Access for given Module and Role
      * Helps to set Full Module Access for Super Admin
@@ -1517,46 +1518,46 @@ class Module extends Model
     {
         $module = Module::find($module_id);
         $module = Module::get($module->name);
-        
+
         // Log::debug('Module:setDefaultRoleAccess ('.$module_id.', '.$role_id.', '.$access_type.')');
-        
+
         $role = DB::table('roles')->where('id', $role_id)->first();
-        
+
         $access_view = 0;
         $access_create = 0;
         $access_edit = 0;
         $access_delete = 0;
         $access_fields = "invisible";
-        
+
         if($access_type == "full") {
             $access_view = 1;
             $access_create = 1;
             $access_edit = 1;
             $access_delete = 1;
             $access_fields = "write";
-            
+
         } else if($access_type == "readonly") {
             $access_view = 1;
             $access_create = 0;
             $access_edit = 0;
             $access_delete = 0;
-            
+
             $access_fields = "readonly";
         }
-        
+
         $now = date("Y-m-d H:i:s");
-        
+
         // 1. Set Module Access
-        
+
         $module_perm = DB::table('role_module')->where('role_id', $role->id)->where('module_id', $module->id)->first();
         if(!isset($module_perm->id)) {
             DB::insert('insert into role_module (role_id, module_id, acc_view, acc_create, acc_edit, acc_delete, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?)', [$role->id, $module->id, $access_view, $access_create, $access_edit, $access_delete, $now, $now]);
         } else {
             DB::table('role_module')->where('role_id', $role->id)->where('module_id', $module->id)->update(['acc_view' => $access_view, 'acc_create' => $access_create, 'acc_edit' => $access_edit, 'acc_delete' => $access_delete]);
         }
-        
+
         // 2. Set Module Fields Access
-        
+
         foreach($module->fields as $field) {
             // find role field permission
             $field_perm = DB::table('role_module_fields')->where('role_id', $role->id)->where('field_id', $field['id'])->first();
@@ -1567,7 +1568,7 @@ class Module extends Model
             }
         }
     }
-    
+
     /**
      * Set Default Access for given Module Field and Role
      * Helps to set Full Module Access for Super Admin when new field is created
@@ -1582,20 +1583,20 @@ class Module extends Model
     {
         $field = ModuleFields::find($field_id);
         $module = Module::get($field->module);
-        
+
         $role = DB::table('roles')->where('id', $role_id)->first();
-        
+
         $access_fields = "invisible";
-        
+
         if($access_type == "full") {
             $access_fields = "write";
-            
+
         } else if($access_type == "readonly") {
             $access_fields = "readonly";
         }
-        
+
         $now = date("Y-m-d H:i:s");
-        
+
         // find role field permission
         $field_perm = DB::table('role_module_fields')->where('role_id', $role->id)->where('field_id', $field->id)->first();
         if(!isset($field_perm->id)) {
@@ -1604,7 +1605,7 @@ class Module extends Model
             DB::table('role_module_fields')->where('role_id', $role->id)->where('field_id', $field->id)->update(['access' => $access_fields]);
         }
     }
-    
+
     /**
      * Get list of Columns to display in Index Page for a particular Module
      * Also Filters the columns for Access control

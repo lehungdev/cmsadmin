@@ -19,13 +19,14 @@ use Datatables;
 use Collective\Html\FormFacade as Form;
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
+use Illuminate\Support\Str;
 
 use App\User;
 
 class UsersController extends Controller
 {
 	public $show_action = false;
-	
+
 	/**
 	 * Display a listing of the Users.
 	 *
@@ -34,7 +35,7 @@ class UsersController extends Controller
 	public function index()
 	{
 		$module = Module::get('Users');
-		
+
 		if(Module::hasAccess($module->id)) {
 			return View('la.users.index', [
 				'show_actions' => $this->show_action,
@@ -88,11 +89,11 @@ class UsersController extends Controller
 		$data = $out->getData();
 
 		$fields_popup = ModuleFields::getModuleFields('Users');
-		
+
 		for($i=0; $i < count($data->data); $i++) {
-			for ($j=0; $j < count($listing_cols); $j++) { 
+			for ($j=0; $j < count($listing_cols); $j++) {
 				$col = $listing_cols[$j];
-				if($fields_popup[$col] != null && starts_with($fields_popup[$col]->popup_vals, "@")) {
+				if($fields_popup[$col] != null && Str::of($fields_popup[$col]->popup_vals)->startsWith('@')) {
 					$data->data[$i][$j] = ModuleFields::getFieldValue($fields_popup[$col], $data->data[$i][$j]);
 				}
 				if($col == $module->view_col) {

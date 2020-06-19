@@ -21,6 +21,7 @@ use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
 use Lehungdev\Crmadmin\Helpers\LAHelper;
 use Shanmuga\LaravelEntrust\LaravelEntrustFacade as LaravelEntrust;
+use Illuminate\Support\Str;
 
 use App\Permission;
 use App\Role;
@@ -28,7 +29,7 @@ use App\Role;
 class PermissionsController extends Controller
 {
 	public $show_action = true;
-	
+
 	/**
 	 * Display a listing of the Permissions.
 	 *
@@ -37,7 +38,7 @@ class PermissionsController extends Controller
 	public function index()
 	{
 		$module = Module::get('Permissions');
-		
+
 		if(Module::hasAccess($module->id)) {
 			return View('la.permissions.index', [
 				'show_actions' => $this->show_action,
@@ -68,19 +69,19 @@ class PermissionsController extends Controller
 	public function store(Request $request)
 	{
 		if(Module::hasAccess("Permissions", "create")) {
-		
+
 			$rules = Module::validateRules("Permissions", $request);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();
 			}
-			
+
 			$insert_id = Module::insert("Permissions", $request);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.permissions.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -95,12 +96,12 @@ class PermissionsController extends Controller
 	public function show($id)
 	{
 		if(Module::hasAccess("Permissions", "view")) {
-			
+
 			$permission = Permission::find($id);
 			if(isset($permission->id)) {
 				$module = Module::get('Permissions');
 				$module->row = $permission;
-				
+
 				$roles = Role::all();
 
 				return view('la.permissions.show', [
@@ -129,13 +130,13 @@ class PermissionsController extends Controller
 	 */
 	public function edit($id)
 	{
-		if(Module::hasAccess("Permissions", "edit")) {			
+		if(Module::hasAccess("Permissions", "edit")) {
 			$permission = Permission::find($id);
-			if(isset($permission->id)) {	
+			if(isset($permission->id)) {
 				$module = Module::get('Permissions');
-				
+
 				$module->row = $permission;
-				
+
 				return view('la.permissions.edit', [
 					'module' => $module,
 					'view_col' => $module->view_col,
@@ -161,19 +162,19 @@ class PermissionsController extends Controller
 	public function update(Request $request, $id)
 	{
 		if(Module::hasAccess("Permissions", "edit")) {
-			
+
 			$rules = Module::validateRules("Permissions", $request, true);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();;
 			}
-			
+
 			$insert_id = Module::updateRow("Permissions", $request, $id);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.permissions.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -189,14 +190,14 @@ class PermissionsController extends Controller
 	{
 		if(Module::hasAccess("Permissions", "delete")) {
 			Permission::find($id)->delete();
-			
+
 			// Redirecting to index() method
 			return redirect()->route(config('crmadmin.adminRoute') . '.permissions.index');
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
 	}
-	
+
 	/**
 	 * Datatable Ajax fetch
 	 *
@@ -212,11 +213,11 @@ class PermissionsController extends Controller
 		$data = $out->getData();
 
 		$fields_popup = ModuleFields::getModuleFields('Permissions');
-		
+
 		for($i=0; $i < count($data->data); $i++) {
-			for ($j=0; $j < count($listing_cols); $j++) { 
+			for ($j=0; $j < count($listing_cols); $j++) {
 				$col = $listing_cols[$j];
-				if($fields_popup[$col] != null && starts_with($fields_popup[$col]->popup_vals, "@")) {
+				if($fields_popup[$col] != null && Str::of($fields_popup[$col]->popup_vals)->startsWith('@')) {
 					$data->data[$i][$j] = ModuleFields::getFieldValue($fields_popup[$col], $data->data[$i][$j]);
 				}
 				if($col == $module->view_col) {
@@ -226,13 +227,13 @@ class PermissionsController extends Controller
 				//    $data->data[$i][$j];
 				// }
 			}
-			
+
 			if($this->show_action) {
 				$output = '';
 				if(Module::hasAccess("Permissions", "edit")) {
 					$output .= '<a href="'.url(config('crmadmin.adminRoute') . '/permissions/'.$data->data[$i][0].'/edit').'" class="btn btn-warning btn-xs" style="display:inline;padding:2px 5px 3px 5px;"><i class="fa fa-edit"></i></a>';
 				}
-				
+
 				if(Module::hasAccess("Permissions", "delete")) {
 					$output .= Form::open(['route' => [config('crmadmin.adminRoute') . '.permissions.destroy', $data->data[$i][0]], 'method' => 'delete', 'style'=>'display:inline']);
 					$output .= ' <button class="btn btn-danger btn-xs" type="submit"><i class="fa fa-times"></i></button>';
@@ -258,7 +259,7 @@ class PermissionsController extends Controller
 			$module = Module::get('Permissions');
 			$module->row = $permission;
 			$roles = Role::all();
-			
+
 			foreach ($roles as $role) {
 				$permi_role_id = 'permi_role_'.$role->id;
 				$permission_set = $request->$permi_role_id;

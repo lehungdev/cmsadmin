@@ -19,13 +19,14 @@ use Datatables;
 use Collective\Html\FormFacade as Form;
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
+use Illuminate\Support\Str;
 
 use App\Models\Department;
 
 class DepartmentsController extends Controller
 {
 	public $show_action = true;
-	
+
 	/**
 	 * Display a listing of the Departments.
 	 *
@@ -34,7 +35,7 @@ class DepartmentsController extends Controller
 	public function index()
 	{
 		$module = Module::get('Departments');
-		
+
 		if(Module::hasAccess($module->id)) {
 			return View('la.departments.index', [
 				'show_actions' => $this->show_action,
@@ -65,19 +66,19 @@ class DepartmentsController extends Controller
 	public function store(Request $request)
 	{
 		if(Module::hasAccess("Departments", "create")) {
-		
+
 			$rules = Module::validateRules("Departments", $request);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();
 			}
-			
+
 			$insert_id = Module::insert("Departments", $request);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.departments.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -92,12 +93,12 @@ class DepartmentsController extends Controller
 	public function show($id)
 	{
 		if(Module::hasAccess("Departments", "view")) {
-			
+
 			$department = Department::find($id);
 			if(isset($department->id)) {
 				$module = Module::get('Departments');
 				$module->row = $department;
-				
+
 				return view('la.departments.show', [
 					'module' => $module,
 					'view_col' => $module->view_col,
@@ -123,13 +124,13 @@ class DepartmentsController extends Controller
 	 */
 	public function edit($id)
 	{
-		if(Module::hasAccess("Departments", "edit")) {			
+		if(Module::hasAccess("Departments", "edit")) {
 			$department = Department::find($id);
-			if(isset($department->id)) {	
+			if(isset($department->id)) {
 				$module = Module::get('Departments');
-				
+
 				$module->row = $department;
-				
+
 				return view('la.departments.edit', [
 					'module' => $module,
 					'view_col' => $module->view_col,
@@ -155,19 +156,19 @@ class DepartmentsController extends Controller
 	public function update(Request $request, $id)
 	{
 		if(Module::hasAccess("Departments", "edit")) {
-			
+
 			$rules = Module::validateRules("Departments", $request, true);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();;
 			}
-			
+
 			$insert_id = Module::updateRow("Departments", $request, $id);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.departments.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -183,14 +184,14 @@ class DepartmentsController extends Controller
 	{
 		if(Module::hasAccess("Departments", "delete")) {
 			Department::find($id)->delete();
-			
+
 			// Redirecting to index() method
 			return redirect()->route(config('crmadmin.adminRoute') . '.departments.index');
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
 	}
-	
+
 	/**
 	 * Datatable Ajax fetch
 	 *
@@ -206,11 +207,11 @@ class DepartmentsController extends Controller
 		$data = $out->getData();
 
 		$fields_popup = ModuleFields::getModuleFields('Departments');
-		
+
 		for($i=0; $i < count($data->data); $i++) {
-			for ($j=0; $j < count($listing_cols); $j++) { 
+			for ($j=0; $j < count($listing_cols); $j++) {
 				$col = $listing_cols[$j];
-				if($fields_popup[$col] != null && starts_with($fields_popup[$col]->popup_vals, "@")) {
+				if($fields_popup[$col] != null && Str::of($fields_popup[$col]->popup_vals)->startsWith('@')) {
 					$data->data[$i][$j] = ModuleFields::getFieldValue($fields_popup[$col], $data->data[$i][$j]);
 				}
 				if($col == $module->view_col) {
@@ -220,13 +221,13 @@ class DepartmentsController extends Controller
 				//    $data->data[$i][$j];
 				// }
 			}
-			
+
 			if($this->show_action) {
 				$output = '';
 				if(Module::hasAccess("Departments", "edit")) {
 					$output .= '<a href="'.url(config('crmadmin.adminRoute') . '/departments/'.$data->data[$i][0].'/edit').'" class="btn btn-warning btn-xs" style="display:inline;padding:2px 5px 3px 5px;"><i class="fa fa-edit"></i></a>';
 				}
-				
+
 				if(Module::hasAccess("Departments", "delete")) {
 					$output .= Form::open(['route' => [config('crmadmin.adminRoute') . '.departments.destroy', $data->data[$i][0]], 'method' => 'delete', 'style'=>'display:inline']);
 					$output .= ' <button class="btn btn-danger btn-xs" type="submit"><i class="fa fa-times"></i></button>';

@@ -19,13 +19,14 @@ use Datatables;
 use Collective\Html\FormFacade as Form;
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
+use Illuminate\Support\Str;
 
 use App\Models\Organization;
 
 class OrganizationsController extends Controller
 {
 	public $show_action = true;
-	
+
 	/**
 	 * Display a listing of the Organizations.
 	 *
@@ -34,7 +35,7 @@ class OrganizationsController extends Controller
 	public function index()
 	{
 		$module = Module::get('Organizations');
-		
+
 		if(Module::hasAccess($module->id)) {
 			return View('la.organizations.index', [
 				'show_actions' => $this->show_action,
@@ -65,19 +66,19 @@ class OrganizationsController extends Controller
 	public function store(Request $request)
 	{
 		if(Module::hasAccess("Organizations", "create")) {
-		
+
 			$rules = Module::validateRules("Organizations", $request);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();
 			}
-			
+
 			$insert_id = Module::insert("Organizations", $request);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.organizations.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -92,12 +93,12 @@ class OrganizationsController extends Controller
 	public function show($id)
 	{
 		if(Module::hasAccess("Organizations", "view")) {
-			
+
 			$organization = Organization::find($id);
 			if(isset($organization->id)) {
 				$module = Module::get('Organizations');
 				$module->row = $organization;
-				
+
 				return view('la.organizations.show', [
 					'module' => $module,
 					'view_col' => $module->view_col,
@@ -123,13 +124,13 @@ class OrganizationsController extends Controller
 	 */
 	public function edit($id)
 	{
-		if(Module::hasAccess("Organizations", "edit")) {			
+		if(Module::hasAccess("Organizations", "edit")) {
 			$organization = Organization::find($id);
-			if(isset($organization->id)) {	
+			if(isset($organization->id)) {
 				$module = Module::get('Organizations');
-				
+
 				$module->row = $organization;
-				
+
 				return view('la.organizations.edit', [
 					'module' => $module,
 					'view_col' => $module->view_col,
@@ -155,19 +156,19 @@ class OrganizationsController extends Controller
 	public function update(Request $request, $id)
 	{
 		if(Module::hasAccess("Organizations", "edit")) {
-			
+
 			$rules = Module::validateRules("Organizations", $request, true);
-			
+
 			$validator = Validator::make($request->all(), $rules);
-			
+
 			if ($validator->fails()) {
 				return redirect()->back()->withErrors($validator)->withInput();;
 			}
-			
+
 			$insert_id = Module::updateRow("Organizations", $request, $id);
-			
+
 			return redirect()->route(config('crmadmin.adminRoute') . '.organizations.index');
-			
+
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
@@ -183,14 +184,14 @@ class OrganizationsController extends Controller
 	{
 		if(Module::hasAccess("Organizations", "delete")) {
 			Organization::find($id)->delete();
-			
+
 			// Redirecting to index() method
 			return redirect()->route(config('crmadmin.adminRoute') . '.organizations.index');
 		} else {
 			return redirect(config('crmadmin.adminRoute')."/");
 		}
 	}
-	
+
 	/**
 	 * Datatable Ajax fetch
 	 *
@@ -206,9 +207,9 @@ class OrganizationsController extends Controller
 		$data = $out->getData();
 
 		$fields_popup = ModuleFields::getModuleFields('Organizations');
-		
+
 		for($i=0; $i < count($data->data); $i++) {
-			for ($j=0; $j < count($listing_cols); $j++) { 
+			for ($j=0; $j < count($listing_cols); $j++) {
 				$col = $listing_cols[$j];
 				if($fields_popup[$col] != null && $fields_popup[$col]->field_type_str == "Image") {
 					if($data->data[$i][$j] != 0) {
@@ -222,7 +223,7 @@ class OrganizationsController extends Controller
 						$data->data[$i][$j] = "";
 					}
 				}
-				if($fields_popup[$col] != null && starts_with($fields_popup[$col]->popup_vals, "@")) {
+				if($fields_popup[$col] != null && Str::of($fields_popup[$col]->popup_vals)->startsWith('@')) {
 					$data->data[$i][$j] = ModuleFields::getFieldValue($fields_popup[$col], $data->data[$i][$j]);
 				}
 				if($col == $module->view_col) {
@@ -232,13 +233,13 @@ class OrganizationsController extends Controller
 				//    $data->data[$i][$j];
 				// }
 			}
-			
+
 			if($this->show_action) {
 				$output = '';
 				if(Module::hasAccess("Organizations", "edit")) {
 					$output .= '<a href="'.url(config('crmadmin.adminRoute') . '/organizations/'.$data->data[$i][0].'/edit').'" class="btn btn-warning btn-xs" style="display:inline;padding:2px 5px 3px 5px;"><i class="fa fa-edit"></i></a>';
 				}
-				
+
 				if(Module::hasAccess("Organizations", "delete")) {
 					$output .= Form::open(['route' => [config('crmadmin.adminRoute') . '.organizations.destroy', $data->data[$i][0]], 'method' => 'delete', 'style'=>'display:inline']);
 					$output .= ' <button class="btn btn-danger btn-xs" type="submit"><i class="fa fa-times"></i></button>';

@@ -12,6 +12,7 @@ namespace Lehungdev\Crmadmin\Helpers;
 use DB;
 use Log;
 
+use Illuminate\Support\Str;
 use Lehungdev\Crmadmin\Models\Module;
 
 /**
@@ -37,14 +38,14 @@ class LAHelper
         $module_name = trim($module_name);
         $module_name = str_replace(" ", "_", $module_name);
 
-        $array['module'] = ucfirst(str_plural($module_name));
-        $array['label'] = ucfirst(str_plural($module_name));
-        $array['table'] = strtolower(str_plural($module_name));
-        $array['model'] = ucfirst(str_singular($module_name));
+        $array['module'] = ucfirst(Str::plural($module_name));
+        $array['label'] = ucfirst(Str::plural($module_name));
+        $array['table'] = strtolower(Str::plural($module_name));
+        $array['model'] = ucfirst(Str::plural($module_name));
         $array['fa_icon'] = $icon;
         $array['controller'] = $array['module'] . "Controller";
-        $array['singular_l'] = strtolower(str_singular($module_name));
-        $array['singular_c'] = ucfirst(str_singular($module_name));
+        $array['singular_l'] = strtolower(Str::plural($module_name));
+        $array['singular_c'] = ucfirst(Str::plural($module_name));
 
         return (object)$array;
     }
@@ -498,13 +499,12 @@ class LAHelper
     {
         $var = \App::VERSION();
 
-        if(starts_with($var, "5.2")) {
-            return 5.2;
-        } else if(starts_with($var, "5.5")) {
-            return 5.5;
-        }  else if(starts_with($var, "7.12.0")) {
-            return 7.12.0;
-        } else if(substr_count($var, ".") == 3) {
+        // if(starts_with($var, "5.2")) {
+        //     return 5.2;
+        // } else if(starts_with($var, "5.5")) {
+        //     return 5.5;
+        // } else
+        if(substr_count($var, ".") == 3) {
             $var = substr($var, 0, strrpos($var, "."));
             return $var . "-str";
         } else {
