@@ -1,7 +1,7 @@
 <?php
 
 $as = "";
-if(\Lehungdev\Crmadmin\Helpers\LAHelper::laravel_ver() == 5.5) {
+if(\Lehungdev\Crmadmin\Helpers\LAHelper::laravel_ver() != 5.3) {
     $as = config('crmadmin.adminRoute') . '.';
 }
 

@@ -45,31 +45,31 @@ class LAProvider extends ServiceProvider
         // Artisan::call('migrate', ['--path' => "vendor/lehungdev/crmadmin/src/Migrations/"]);
         //echo "Migrations completed !!!.";
         // Execute by php artisan vendor:publish --provider="Lehungdev\Crmadmin\LAProvider"
-        
+
         /*
         |--------------------------------------------------------------------------
         | Blade Directives for Entrust not working in Laravel 5.5
         |--------------------------------------------------------------------------
         */
-        if(LAHelper::laravel_ver() == 5.5) {
-            
+        if(LAHelper::laravel_ver() != 5.3) {
+
             // Call to Entrust::hasRole
             Blade::directive('role', function ($expression) {
                 return "<?php if (\\Entrust::hasRole({$expression})) : ?>";
             });
-            
+
             // Call to Entrust::can
             Blade::directive('permission', function ($expression) {
                 return "<?php if (\\Entrust::can({$expression})) : ?>";
             });
-            
+
             // Call to Entrust::ability
             Blade::directive('ability', function ($expression) {
                 return "<?php if (\\Entrust::ability({$expression})) : ?>";
             });
         }
     }
-    
+
     /**
      * Register the application services including routes, Required Providers, Alias, Controllers, Blade Directives
      * and Commands.
@@ -79,18 +79,18 @@ class LAProvider extends ServiceProvider
     public function register()
     {
         include __DIR__ . '/routes.php';
-        
+
         // For LAEditor
         if(file_exists(__DIR__ . '/../../laeditor')) {
             include __DIR__ . '/../../laeditor/src/routes.php';
         }
-        
+
         /*
         |--------------------------------------------------------------------------
         | Providers
         |--------------------------------------------------------------------------
         */
-        
+
         // Collective HTML & Form Helper
         $this->app->register(\Collective\Html\HtmlServiceProvider::class);
         // For Datatables
@@ -101,91 +101,91 @@ class LAProvider extends ServiceProvider
         $this->app->register(\Zizaco\Entrust\EntrustServiceProvider::class);
         // For Spatie Backup
         $this->app->register(\Spatie\Backup\BackupServiceProvider::class);
-        
+
         /*
         |--------------------------------------------------------------------------
         | Register the Alias
         |--------------------------------------------------------------------------
         */
-        
+
         $loader = AliasLoader::getInstance();
-        
+
         // Collective HTML & Form Helper
         $loader->alias('Form', \Collective\Html\FormFacade::class);
         $loader->alias('HTML', \Collective\Html\HtmlFacade::class);
-        
+
         // For Gravatar User Profile Pics
         $loader->alias('Gravatar', \Creativeorange\Gravatar\Facades\Gravatar::class);
-        
+
         // For CrmAdmin Code Generation
         $loader->alias('CodeGenerator', \Lehungdev\Crmadmin\CodeGenerator::class);
-        
+
         // For CrmAdmin Form Helper
         $loader->alias('LAFormMaker', \Lehungdev\Crmadmin\LAFormMaker::class);
-        
+
         // For CrmAdmin Helper
         $loader->alias('LAHelper', \Lehungdev\Crmadmin\Helpers\LAHelper::class);
-        
-        // CrmAdmin Module Model 
+
+        // CrmAdmin Module Model
         $loader->alias('Module', \Lehungdev\Crmadmin\Models\Module::class);
-        
+
         // For CrmAdmin Configuration Model
         $loader->alias('LAConfigs', \Lehungdev\Crmadmin\Models\LAConfigs::class);
-        
+
         // For Entrust
         $loader->alias('Entrust', \Zizaco\Entrust\EntrustFacade::class);
         $loader->alias('role', \Zizaco\Entrust\Middleware\EntrustRole::class);
         $loader->alias('permission', \Zizaco\Entrust\Middleware\EntrustPermission::class);
         $loader->alias('ability', \Zizaco\Entrust\Middleware\EntrustAbility::class);
-        
+
         /*
         |--------------------------------------------------------------------------
         | Register the Controllers
         |--------------------------------------------------------------------------
         */
-        
+
         $this->app->make('Lehungdev\Crmadmin\Controllers\ModuleController');
         $this->app->make('Lehungdev\Crmadmin\Controllers\FieldController');
         $this->app->make('Lehungdev\Crmadmin\Controllers\MenuController');
-        
+
         // For LAEditor
         if(file_exists(__DIR__ . '/../../laeditor')) {
             $this->app->make('Lehungdev\Laeditor\Controllers\CodeEditorController');
         }
-        
+
         /*
         |--------------------------------------------------------------------------
         | Blade Directives
         |--------------------------------------------------------------------------
         */
-        
+
         // LAForm Input Maker
         Blade::directive('la_input', function ($expression) {
-            if(LAHelper::laravel_ver() == 5.5) {
+            if(LAHelper::laravel_ver() != 5.3) {
                 $expression = "(" . $expression . ")";
             }
             return "<?php echo LAFormMaker::input$expression; ?>";
         });
-        
+
         // LAForm Form Maker
         Blade::directive('la_form', function ($expression) {
-            if(LAHelper::laravel_ver() == 5.5) {
+            if(LAHelper::laravel_ver() != 5.3) {
                 $expression = "(" . $expression . ")";
             }
             return "<?php echo LAFormMaker::form$expression; ?>";
         });
-        
+
         // LAForm Maker - Display Values
         Blade::directive('la_display', function ($expression) {
-            if(LAHelper::laravel_ver() == 5.5) {
+            if(LAHelper::laravel_ver() != 5.3) {
                 $expression = "(" . $expression . ")";
             }
             return "<?php echo LAFormMaker::display$expression; ?>";
         });
-        
+
         // LAForm Maker - Check Whether User has Module Access
         Blade::directive('la_access', function ($expression) {
-            if(LAHelper::laravel_ver() == 5.5) {
+            if(LAHelper::laravel_ver() != 5.3) {
                 $expression = "(" . $expression . ")";
             }
             return "<?php if(LAFormMaker::la_access$expression) { ?>";
@@ -193,10 +193,10 @@ class LAProvider extends ServiceProvider
         Blade::directive('endla_access', function ($expression) {
             return "<?php } ?>";
         });
-        
+
         // LAForm Maker - Check Whether User has Module Field Access
         Blade::directive('la_field_access', function ($expression) {
-            if(LAHelper::laravel_ver() == 5.5) {
+            if(LAHelper::laravel_ver() != 5.3) {
                 $expression = "(" . $expression . ")";
             }
             return "<?php if(LAFormMaker::la_field_access$expression) { ?>";
@@ -204,25 +204,25 @@ class LAProvider extends ServiceProvider
         Blade::directive('endla_field_access', function ($expression) {
             return "<?php } ?>";
         });
-        
+
         /*
         |--------------------------------------------------------------------------
         | Register the Commands
         |--------------------------------------------------------------------------
         */
-        
+
         $commands = [
             \Lehungdev\Crmadmin\Commands\Migration::class,
             \Lehungdev\Crmadmin\Commands\Crud::class,
             \Lehungdev\Crmadmin\Commands\Packaging::class,
             \Lehungdev\Crmadmin\Commands\LAInstall::class
         ];
-        
+
         // For LAEditor
         if(file_exists(__DIR__ . '/../../laeditor')) {
             $commands[] = \Lehungdev\Laeditor\Commands\LAEditor::class;
         }
-        
+
         $this->commands($commands);
     }
 }

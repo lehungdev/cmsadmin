@@ -15,7 +15,7 @@ Route::get('files/{hash}/{name}', 'LA\UploadsController@get_file');
 */
 
 $as = "";
-if(\Lehungdev\Crmadmin\Helpers\LAHelper::laravel_ver() == 5.5) {
+if(\Lehungdev\Crmadmin\Helpers\LAHelper::laravel_ver() != 5.3) {
 	$as = config('crmadmin.adminRoute').'.';
 	
 	// Routes for Laravel 5.5
