@@ -19,7 +19,7 @@ use Datatables;
 use Collective\Html\FormFacade as Form;
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
-use Zizaco\Entrust\EntrustFacade as Entrust;
+use Shanmuga\LaravelEntrust\LaravelEntrustFacade as LaravelEntrust;
 
 use App\Role;
 use App\Permission;
@@ -267,7 +267,7 @@ class RolesController extends Controller
 
 	public function save_module_role_permissions(Request $request, $id)
 	{
-		if(Entrust::hasRole('SUPER_ADMIN')) {
+		if(LaravelEntrust::hasRole('SUPER_ADMIN')) {
 			$role = Role::find($id);
 			$module = Module::get('Roles');
 			$module->row = $role;

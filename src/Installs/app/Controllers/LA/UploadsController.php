@@ -16,7 +16,7 @@ use Collective\Html\FormFacade as Form;
 
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Helpers\LAHelper;
-use Zizaco\Entrust\EntrustFacade as Entrust;
+use Shanmuga\LaravelEntrust\LaravelEntrustFacade as LaravelEntrust;
 
 use Auth;
 use DB;
@@ -98,7 +98,7 @@ class UploadsController extends Controller
             ]);
         }
 
-        if($upload->public || Entrust::hasRole('SUPER_ADMIN') || Auth::user()->id == $upload->user_id) {
+        if($upload->public || LaravelEntrust::hasRole('SUPER_ADMIN') || Auth::user()->id == $upload->user_id) {
 
             $path = $upload->path;
 
@@ -295,7 +295,7 @@ class UploadsController extends Controller
             $uploads = array();
 
             // print_r(Auth::user()->roles);
-            if(Entrust::hasRole('SUPER_ADMIN')) {
+            if(LaravelEntrust::hasRole('SUPER_ADMIN')) {
                 $uploads = Upload::orderBy('id', 'desc')->get();
             } else {
 //				if(config('crmadmin.uploads.private_uploads')) {
@@ -351,7 +351,7 @@ class UploadsController extends Controller
 
             $upload = Upload::find($file_id);
             if(isset($upload->id)) {
-                if($upload->user_id == Auth::user()->id || Entrust::hasRole('SUPER_ADMIN')) {
+                if($upload->user_id == Auth::user()->id || LaravelEntrust::hasRole('SUPER_ADMIN')) {
 
                     // Update Caption
                     $upload->caption = $caption;
@@ -395,7 +395,7 @@ class UploadsController extends Controller
 
             $upload = Upload::find($file_id);
             if(isset($upload->id)) {
-                if($upload->user_id == Auth::user()->id || Entrust::hasRole('SUPER_ADMIN')) {
+                if($upload->user_id == Auth::user()->id || LaravelEntrust::hasRole('SUPER_ADMIN')) {
 
                     // Update Caption
                     $upload->name = $filename;
@@ -443,7 +443,7 @@ class UploadsController extends Controller
 
             $upload = Upload::find($file_id);
             if(isset($upload->id)) {
-                if($upload->user_id == Auth::user()->id || Entrust::hasRole('SUPER_ADMIN')) {
+                if($upload->user_id == Auth::user()->id || LaravelEntrust::hasRole('SUPER_ADMIN')) {
 
                     // Update Caption
                     $upload->public = $public;
@@ -485,7 +485,7 @@ class UploadsController extends Controller
 
             $upload = Upload::find($file_id);
             if(isset($upload->id)) {
-                if($upload->user_id == Auth::user()->id || Entrust::hasRole('SUPER_ADMIN')) {
+                if($upload->user_id == Auth::user()->id || LaravelEntrust::hasRole('SUPER_ADMIN')) {
 
                     // Update Caption
                     $upload->delete();

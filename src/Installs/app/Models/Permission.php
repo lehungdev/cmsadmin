@@ -9,10 +9,10 @@
 
 namespace App;
 
-use Zizaco\Entrust\EntrustPermission;
+use Shanmuga\LaravelEntrust\LaravelEntrustPermission;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Permission extends EntrustPermission
+class Permission extends LaravelEntrustPermission
 {
     use SoftDeletes;
 	

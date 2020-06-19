@@ -20,7 +20,7 @@ use Collective\Html\FormFacade as Form;
 use Lehungdev\Crmadmin\Models\Module;
 use Lehungdev\Crmadmin\Models\ModuleFields;
 use Lehungdev\Crmadmin\Helpers\LAHelper;
-use Zizaco\Entrust\EntrustFacade as Entrust;
+use Shanmuga\LaravelEntrust\LaravelEntrustFacade as LaravelEntrust;
 
 use App\Permission;
 use App\Role;
@@ -253,7 +253,7 @@ class PermissionsController extends Controller
 	 */
 	public function save_permissions(Request $request, $id)
 	{
-		if(Entrust::hasRole('SUPER_ADMIN')) {
+		if(LaravelEntrust::hasRole('SUPER_ADMIN')) {
 			$permission = Permission::find($id);
 			$module = Module::get('Permissions');
 			$module->row = $permission;

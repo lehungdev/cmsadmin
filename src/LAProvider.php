@@ -48,24 +48,24 @@ class LAProvider extends ServiceProvider
 
         /*
         |--------------------------------------------------------------------------
-        | Blade Directives for Entrust not working in Laravel 5.5
+        | Blade Directives for LaravelEntrust not working in Laravel 5.5
         |--------------------------------------------------------------------------
         */
         if(LAHelper::laravel_ver() != 5.3) {
 
-            // Call to Entrust::hasRole
+            // Call to LaravelEntrust::hasRole
             Blade::directive('role', function ($expression) {
-                return "<?php if (\\Entrust::hasRole({$expression})) : ?>";
+                return "<?php if (\\LaravelEntrust::hasRole({$expression})) : ?>";
             });
 
-            // Call to Entrust::can
+            // Call to LaravelEntrust::can
             Blade::directive('permission', function ($expression) {
-                return "<?php if (\\Entrust::can({$expression})) : ?>";
+                return "<?php if (\\LaravelEntrust::can({$expression})) : ?>";
             });
 
-            // Call to Entrust::ability
+            // Call to LaravelEntrust::ability
             Blade::directive('ability', function ($expression) {
-                return "<?php if (\\Entrust::ability({$expression})) : ?>";
+                return "<?php if (\\LaravelEntrust::ability({$expression})) : ?>";
             });
         }
     }
@@ -97,8 +97,8 @@ class LAProvider extends ServiceProvider
         $this->app->register(\Yajra\Datatables\DatatablesServiceProvider::class);
         // For Gravatar
         $this->app->register(\Creativeorange\Gravatar\GravatarServiceProvider::class);
-        // For Entrust
-        $this->app->register(\Zizaco\Entrust\EntrustServiceProvider::class);
+        // For LaravelEntrust
+        $this->app->register(\Shanmuga\LaravelEntrust\LaravelEntrustServiceProvider::class);
         // For Spatie Backup
         $this->app->register(\Spatie\Backup\BackupServiceProvider::class);
 
@@ -132,11 +132,11 @@ class LAProvider extends ServiceProvider
         // For CrmAdmin Configuration Model
         $loader->alias('LAConfigs', \Lehungdev\Crmadmin\Models\LAConfigs::class);
 
-        // For Entrust
-        $loader->alias('Entrust', \Zizaco\Entrust\EntrustFacade::class);
-        $loader->alias('role', \Zizaco\Entrust\Middleware\EntrustRole::class);
-        $loader->alias('permission', \Zizaco\Entrust\Middleware\EntrustPermission::class);
-        $loader->alias('ability', \Zizaco\Entrust\Middleware\EntrustAbility::class);
+        // For LaravelEntrust
+        $loader->alias('LaravelEntrust', \Shanmuga\LaravelEntrust\LaravelEntrustFacade::class);
+        $loader->alias('role', \Shanmuga\LaravelEntrust\Middleware\LaravelEntrustRole::class);
+        $loader->alias('permission', \Shanmuga\LaravelEntrust\Middleware\LaravelEntrustPermission::class);
+        $loader->alias('ability', \Shanmuga\LaravelEntrust\Middleware\LaravelEntrustAbility::class);
 
         /*
         |--------------------------------------------------------------------------
